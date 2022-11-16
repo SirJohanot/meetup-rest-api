@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<web-app>
+    <display-name>Meetup REST API</display-name>
+
+    <servlet>
+        <servlet-name>meetup</servlet-name>
+        <servlet-class>com.patiun.meetuprestapi.controller.MeetupController</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>meetup</servlet-name>
+        <url-pattern>/meetup/*</url-pattern>
+    </servlet-mapping>
+
+</web-app>
+
