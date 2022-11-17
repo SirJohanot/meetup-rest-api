@@ -2,6 +2,7 @@ package com.patiun.meetuprestapi.controller;
 
 import com.patiun.meetuprestapi.command.Command;
 import com.patiun.meetuprestapi.command.factory.CommandFactory;
+import com.patiun.meetuprestapi.exception.ElementNotFoundException;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -35,12 +36,16 @@ public class MeetupController extends HttpServlet {
     private void process(HttpServletRequest request, HttpServletResponse response) throws IOException {
         CommandFactory commandFactory = new CommandFactory();
         String requestMethod = request.getMethod();
+        int statusCode = 200;
         String message = "";
         try {
             Command command = commandFactory.createCommand(requestMethod);
             message = command.execute(request);
+        } catch (ElementNotFoundException e) {
+            statusCode = 404;
+            message = "{\n\t\"error\": \"" + e.getMessage() + "\"\n}";
         } catch (Exception e) {
-            response.setStatus(400);
+            statusCode = 400;
 //            CharArrayWriter cw = new CharArrayWriter();
 //            PrintWriter w = new PrintWriter(cw);
 //            e.printStackTrace(w);
@@ -48,15 +53,16 @@ public class MeetupController extends HttpServlet {
 //            String trace = cw.toString();
             message = "{\n\t\"error\": \"" + e.getMessage() + "\"\n}";
         } finally {
-            writeError(message, response);
+            response.setStatus(statusCode);
+            writeJsonToResponse(message, response);
         }
     }
 
-    private void writeError(String errorMessage, HttpServletResponse response) throws IOException {
+    private void writeJsonToResponse(String json, HttpServletResponse response) throws IOException {
         PrintWriter out = response.getWriter();
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        out.print(errorMessage);
+        out.print(json);
         out.flush();
     }
 

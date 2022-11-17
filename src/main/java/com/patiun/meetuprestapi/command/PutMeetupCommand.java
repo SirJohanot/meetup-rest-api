@@ -15,7 +15,7 @@ public class PutMeetupCommand extends AbstractMeetupCommand {
 
     @Override
     public String execute(HttpServletRequest req) throws ServiceException, IOException {
-        Meetup meetup = getMeetupFromRequestBody(req);
+        Meetup meetup = getObjectFromRequestBody(req, Meetup.class);
 
         meetupService.createMeetup(meetup);
 

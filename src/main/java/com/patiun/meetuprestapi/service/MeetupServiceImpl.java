@@ -4,10 +4,15 @@ import com.patiun.meetuprestapi.dao.MeetupDao;
 import com.patiun.meetuprestapi.dao.helper.DaoHelper;
 import com.patiun.meetuprestapi.dao.helper.DaoHelperFactory;
 import com.patiun.meetuprestapi.entity.Meetup;
+import com.patiun.meetuprestapi.entity.RequestParameters;
 import com.patiun.meetuprestapi.exception.DaoException;
+import com.patiun.meetuprestapi.exception.ElementNotFoundException;
 import com.patiun.meetuprestapi.exception.ServiceException;
+import com.patiun.meetuprestapi.filter.BulkMeetupFilter;
+import com.patiun.meetuprestapi.sorting.MeetupListSorter;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class MeetupServiceImpl implements MeetupService {
@@ -29,8 +34,20 @@ public class MeetupServiceImpl implements MeetupService {
         }
     }
 
+    public List<Meetup> getAllMeetupsFilteredAndSorted(RequestParameters requestParameters, BulkMeetupFilter meetupFilter, MeetupListSorter meetupListSorter) throws ServiceException {
+        List<Meetup> fetchResults = getAllMeetups();
+
+        Map<String, String> filterParametersMap = requestParameters.getFilterParameters();
+        fetchResults = meetupFilter.filter(fetchResults, filterParametersMap);
+
+        List<String> sortingParametersList = requestParameters.getSortingParameters();
+        fetchResults = meetupListSorter.sort(fetchResults, sortingParametersList);
+
+        return fetchResults;
+    }
+
     @Override
-    public Meetup getMeetupById(Integer id) throws ServiceException {
+    public Meetup getMeetupById(Integer id) throws ServiceException, ElementNotFoundException {
         Optional<Meetup> meetupOptional;
         try (DaoHelper daoHelper = daoHelperFactory.createHelper()) {
             MeetupDao meetupDao = daoHelper.createMeetupDao();
@@ -40,13 +57,13 @@ public class MeetupServiceImpl implements MeetupService {
             throw new ServiceException(e);
         }
         if (meetupOptional.isEmpty()) {
-            throw new ServiceException("Could not find a meetup by id = " + id);
+            throw new ElementNotFoundException("Could not find a meetup by id = " + id);
         }
         return meetupOptional.get();
     }
 
     @Override
-    public void updateMeetup(Meetup meetup, Integer id) throws ServiceException {
+    public void updateMeetup(Meetup meetup, Integer id) throws ServiceException, ElementNotFoundException {
         try (DaoHelper daoHelper = daoHelperFactory.createHelper()) {
             MeetupDao meetupDao = daoHelper.createMeetupDao();
 
@@ -70,7 +87,7 @@ public class MeetupServiceImpl implements MeetupService {
     }
 
     @Override
-    public void deleteMeetup(Integer id) throws ServiceException {
+    public void deleteMeetup(Integer id) throws ServiceException, ElementNotFoundException {
         try (DaoHelper daoHelper = daoHelperFactory.createHelper()) {
             MeetupDao meetupDao = daoHelper.createMeetupDao();
 
@@ -82,10 +99,10 @@ public class MeetupServiceImpl implements MeetupService {
         }
     }
 
-    private void throwServiceExceptionIfMeetupByIdDoesNotExist(MeetupDao meetupDao, Integer id) throws DaoException, ServiceException {
+    private void throwServiceExceptionIfMeetupByIdDoesNotExist(MeetupDao meetupDao, Integer id) throws DaoException, ElementNotFoundException {
         Optional<Meetup> meetupOptional = meetupDao.getById(id);
         if (meetupOptional.isEmpty()) {
-            throw new ServiceException("Could not find a meetup by id = " + id);
+            throw new ElementNotFoundException("Could not find a meetup by id = " + id);
         }
     }
 }

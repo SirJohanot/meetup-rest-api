@@ -5,6 +5,7 @@ import com.patiun.meetuprestapi.dao.helper.DaoHelper;
 import com.patiun.meetuprestapi.dao.helper.DaoHelperFactory;
 import com.patiun.meetuprestapi.entity.Meetup;
 import com.patiun.meetuprestapi.exception.DaoException;
+import com.patiun.meetuprestapi.exception.ElementNotFoundException;
 import com.patiun.meetuprestapi.exception.ServiceException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -76,7 +77,7 @@ public class MeetupServiceImplTest {
     }
 
     @Test
-    public void testGetMeetupByIdShouldDelegateToMeetupDao() throws DaoException, ServiceException {
+    public void testGetMeetupByIdShouldDelegateToMeetupDao() throws DaoException, ServiceException, ElementNotFoundException {
         //given
         Integer requestId = 1;
         Optional<Meetup> daoGetByIdResult = Optional.of(MEETUP_EXAMPLE);
@@ -100,7 +101,7 @@ public class MeetupServiceImplTest {
     }
 
     @Test
-    public void testGetMeetupByIdShouldThrowServiceExceptionWhenDaoCouldNotFindTheMeetup() throws DaoException {
+    public void testGetMeetupByIdShouldThrowElementNotFoundExceptionWhenDaoCouldNotFindTheMeetup() throws DaoException {
         //given
         Integer requestId = 1;
         Optional<Meetup> daoGetByIdResult = Optional.empty();
@@ -108,7 +109,7 @@ public class MeetupServiceImplTest {
                 .thenReturn(daoGetByIdResult);
         //when
         //then
-        assertThrows(ServiceException.class, () -> meetupService.getMeetupById(requestId));
+        assertThrows(ElementNotFoundException.class, () -> meetupService.getMeetupById(requestId));
     }
 
     @Test
@@ -132,9 +133,11 @@ public class MeetupServiceImplTest {
     }
 
     @Test
-    public void testUpdateMeetupShouldDelegateToMeetupDao() throws DaoException, ServiceException {
+    public void testUpdateMeetupShouldDelegateToMeetupDao() throws DaoException, ServiceException, ElementNotFoundException {
         //given
         Integer targetId = 1;
+        when(meetupDaoMock.getById(targetId))
+                .thenReturn(Optional.of(new Meetup()));
         //when
         meetupService.updateMeetup(MEETUP_EXAMPLE, targetId);
         //then
@@ -145,6 +148,8 @@ public class MeetupServiceImplTest {
     public void testUpdateMeetupShouldThrowServiceExceptionWhenDaoThrowsException() throws DaoException {
         //given
         Integer targetId = 1;
+        when(meetupDaoMock.getById(targetId))
+                .thenReturn(Optional.of(new Meetup()));
         doThrow(DaoException.class)
                 .when(meetupDaoMock)
                 .update(MEETUP_EXAMPLE, targetId);
@@ -154,9 +159,22 @@ public class MeetupServiceImplTest {
     }
 
     @Test
-    public void testDeleteMeetupShouldDelegateToMeetupDao() throws DaoException, ServiceException {
+    public void testUpdateMeetupShouldThrowElementNotFoundExceptionWhenDaoCouldNotFindTheMeetup() throws DaoException {
         //given
         Integer targetId = 1;
+        when(meetupDaoMock.getById(targetId))
+                .thenReturn(Optional.empty());
+        //when
+        //then
+        assertThrows(ElementNotFoundException.class, () -> meetupService.updateMeetup(MEETUP_EXAMPLE, targetId));
+    }
+
+    @Test
+    public void testDeleteMeetupShouldDelegateToMeetupDao() throws DaoException, ServiceException, ElementNotFoundException {
+        //given
+        Integer targetId = 1;
+        when(meetupDaoMock.getById(targetId))
+                .thenReturn(Optional.of(new Meetup()));
         //when
         meetupService.deleteMeetup(targetId);
         //then
@@ -167,11 +185,24 @@ public class MeetupServiceImplTest {
     public void testDeleteMeetupShouldThrowServiceExceptionWhenDaoThrowsException() throws DaoException {
         //given
         Integer targetId = 1;
+        when(meetupDaoMock.getById(targetId))
+                .thenReturn(Optional.of(new Meetup()));
         doThrow(DaoException.class)
                 .when(meetupDaoMock)
                 .delete(targetId);
         //when
         //then
         assertThrows(ServiceException.class, () -> meetupService.deleteMeetup(targetId));
+    }
+
+    @Test
+    public void testDeleteMeetupShouldThrowElementNotFoundExceptionWhenDaoCouldNotFindTheMeetup() throws DaoException {
+        //given
+        Integer targetId = 1;
+        when(meetupDaoMock.getById(targetId))
+                .thenReturn(Optional.empty());
+        //when
+        //then
+        assertThrows(ElementNotFoundException.class, () -> meetupService.deleteMeetup(targetId));
     }
 }
