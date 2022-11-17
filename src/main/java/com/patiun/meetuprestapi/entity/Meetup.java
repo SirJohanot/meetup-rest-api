@@ -1,5 +1,7 @@
 package com.patiun.meetuprestapi.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -9,6 +11,7 @@ public class Meetup {
     private String agenda;
     private String description;
     private String organizer;
+    @JsonFormat(pattern = "dd.MM.yyyy HH:mm")
     private LocalDateTime dateTime;
     private String location;
 

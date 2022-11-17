@@ -1,83 +1,63 @@
 package com.patiun.meetuprestapi.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.patiun.meetuprestapi.dao.helper.DaoHelperFactory;
-import com.patiun.meetuprestapi.entity.Meetup;
-import com.patiun.meetuprestapi.service.MeetupService;
-import com.patiun.meetuprestapi.service.MeetupServiceImpl;
+import com.patiun.meetuprestapi.command.Command;
+import com.patiun.meetuprestapi.command.factory.CommandFactory;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class MeetupController extends HttpServlet {
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        Meetup meetup = requestBodyToMeetup(req);
-        MeetupService meetupService = new MeetupServiceImpl(new DaoHelperFactory());
-        meetupService.createMeetup(meetup);
+        process(req, resp);
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        Integer meetupId = getMeetupIdFromQueryString(req);
-
-        MeetupService meetupService = new MeetupServiceImpl(new DaoHelperFactory());
-        Meetup meetup = meetupService.getMeetupById(meetupId);
-
-        writeJsonToResponse(objectToJson(meetup), resp);
+        process(req, resp);
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        Meetup meetup = requestBodyToMeetup(req);
-
-        Integer meetupId = getMeetupIdFromQueryString(req);
-
-        MeetupService meetupService = new MeetupServiceImpl(new DaoHelperFactory());
-        meetupService.updateMeetup(meetup, meetupId);
+        process(req, resp);
     }
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        Integer meetupId = getMeetupIdFromQueryString(req);
-
-        MeetupService meetupService = new MeetupServiceImpl(new DaoHelperFactory());
-        meetupService.deleteMeetup(meetupId);
+        process(req, resp);
     }
 
-    private Meetup requestBodyToMeetup(HttpServletRequest request) throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        BufferedReader requestReader = request.getReader();
-        return objectMapper.readValue(requestReader, Meetup.class);
+    private void process(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        CommandFactory commandFactory = new CommandFactory();
+        String requestMethod = request.getMethod();
+        String message = "";
+        try {
+            Command command = commandFactory.createCommand(requestMethod);
+            message = command.execute(request);
+        } catch (Exception e) {
+            response.setStatus(400);
+//            CharArrayWriter cw = new CharArrayWriter();
+//            PrintWriter w = new PrintWriter(cw);
+//            e.printStackTrace(w);
+//            w.close();
+//            String trace = cw.toString();
+            message = "{\n\t\"error\": \"" + e.getMessage() + "\"\n}";
+        } finally {
+            writeError(message, response);
+        }
     }
 
-    private Integer getMeetupIdFromQueryString(HttpServletRequest request) {
-        String requestLine = request.getRequestURI();
-        Pattern pattern = Pattern.compile("(?<=/)[\\d+]$");
-        Matcher matcher = pattern.matcher(requestLine);
-        String idString = matcher.group(1);
-        return Integer.valueOf(idString);
-    }
-
-    private String objectToJson(Object object) throws JsonProcessingException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        return objectMapper.writeValueAsString(object);
-    }
-
-    private void writeJsonToResponse(String json, HttpServletResponse response) throws IOException {
+    private void writeError(String errorMessage, HttpServletResponse response) throws IOException {
         PrintWriter out = response.getWriter();
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        out.print(json);
+        out.print(errorMessage);
         out.flush();
     }
+
 }

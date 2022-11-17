@@ -4,10 +4,9 @@ import com.patiun.meetuprestapi.entity.Meetup;
 import com.patiun.meetuprestapi.exception.DaoException;
 
 import java.sql.*;
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,8 +14,8 @@ public class MeetupDaoImpl implements MeetupDao {
 
     private static final String SELECT_BY_ID_QUERY = "SELECT * FROM meetup WHERE id = ?;";
     private static final String SELECT_ALL_QUERY = "SELECT * FROM meetup;";
-    private static final String INSERT_QUERY = "INSERT INTO meetup SET agenda = '?', description = '?', organizer = '?', date_time = '?', location = '?';";
-    private static final String UPDATE_QUERY = "UPDATE meetup SET agenda = '?', description = '?', organizer = '?', date_time = '?', location = '?' WHERE id = ?;";
+    private static final String INSERT_QUERY = "INSERT INTO meetup (agenda, description, organizer, date_time, location) VALUES (?, ?, ?, ?, ?);";
+    private static final String UPDATE_QUERY = "UPDATE meetup SET agenda = ?, description = ?, organizer = ?, date_time = ?, location = ? WHERE id = ?;";
     private static final String DELETE_QUERY = "DELETE FROM meetup WHERE id = ?;";
 
     private final Connection connection;
@@ -27,7 +26,7 @@ public class MeetupDaoImpl implements MeetupDao {
 
     @Override
     public Optional<Meetup> getById(Integer id) throws DaoException {
-        List<Meetup> results = executeQuery(SELECT_BY_ID_QUERY, id);
+        List<Meetup> results = executeQuery(SELECT_BY_ID_QUERY, List.of(id));
         Optional<Meetup> resultOptional;
         if (results.isEmpty()) {
             resultOptional = Optional.empty();
@@ -40,7 +39,7 @@ public class MeetupDaoImpl implements MeetupDao {
 
     @Override
     public List<Meetup> getAll() throws DaoException {
-        return executeQuery(SELECT_ALL_QUERY);
+        return executeQuery(SELECT_ALL_QUERY, Collections.emptyList());
     }
 
     @Override
@@ -50,15 +49,17 @@ public class MeetupDaoImpl implements MeetupDao {
 
     @Override
     public void update(Meetup item, Integer id) throws DaoException {
-        executeUpdate(UPDATE_QUERY, getMeetupNonIdFields(item), id);
+        List<Object> statementParametersList = getMeetupNonIdFields(item);
+        statementParametersList.add(id);
+        executeUpdate(UPDATE_QUERY, statementParametersList);
     }
 
     @Override
     public void delete(Integer id) throws DaoException {
-        executeUpdate(DELETE_QUERY, id);
+        executeUpdate(DELETE_QUERY, List.of(id));
     }
 
-    private void executeUpdate(String query, Object... parameters) throws DaoException {
+    private void executeUpdate(String query, List<Object> parameters) throws DaoException {
         try (PreparedStatement preparedStatement = buildPreparedStatement(query, parameters)) {
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
@@ -66,7 +67,7 @@ public class MeetupDaoImpl implements MeetupDao {
         }
     }
 
-    private List<Meetup> executeQuery(String query, Object... parameters) throws DaoException {
+    private List<Meetup> executeQuery(String query, List<Object> parameters) throws DaoException {
         try (PreparedStatement preparedStatement = buildPreparedStatement(query, parameters);
              ResultSet queryResults = preparedStatement.executeQuery()) {
             return extractResultsFromResultSet(queryResults);
@@ -75,7 +76,7 @@ public class MeetupDaoImpl implements MeetupDao {
         }
     }
 
-    private PreparedStatement buildPreparedStatement(String query, Object... parameters) throws SQLException {
+    private PreparedStatement buildPreparedStatement(String query, List<Object> parameters) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(query);
         int i = 1;
         for (Object parameter : parameters) {
@@ -106,25 +107,19 @@ public class MeetupDaoImpl implements MeetupDao {
         LocalDateTime dateTime = timestampToLocalDateTime(dateTimeTimestamp);
 
         String location = resultSet.getString("location");
-        
+
         return new Meetup(id, agenda, description, organizer, dateTime, location);
     }
 
     private LocalDateTime timestampToLocalDateTime(Timestamp timestamp) {
-        long time = timestamp.getTime();
-        Instant instant = Instant.ofEpochMilli(time);
-        ZoneOffset zoneOffset = ZoneOffset.UTC;
-        return LocalDateTime.ofInstant(instant, zoneOffset);
+        return timestamp.toLocalDateTime();
     }
 
     private Timestamp localDateTimeToTimestamp(LocalDateTime localDateTime) {
-        ZoneOffset zoneOffset = ZoneOffset.UTC;
-        Instant instant = localDateTime.toInstant(zoneOffset);
-        long time = instant.getEpochSecond();
-        return new Timestamp(time);
+        return Timestamp.valueOf(localDateTime);
     }
 
-    private Object[] getMeetupNonIdFields(Meetup meetup) {
+    private List<Object> getMeetupNonIdFields(Meetup meetup) {
         List<Object> fields = new ArrayList<>();
 
         String agenda = meetup.getAgenda();
@@ -143,6 +138,6 @@ public class MeetupDaoImpl implements MeetupDao {
         String location = meetup.getLocation();
         fields.add(location);
 
-        return fields.toArray();
+        return fields;
     }
 }

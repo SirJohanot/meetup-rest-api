@@ -22,6 +22,7 @@ public class MeetupServiceImpl implements MeetupService {
     public List<Meetup> getAllMeetups() throws ServiceException {
         try (DaoHelper daoHelper = daoHelperFactory.createHelper()) {
             MeetupDao meetupDao = daoHelper.createMeetupDao();
+
             return meetupDao.getAll();
         } catch (DaoException e) {
             throw new ServiceException(e);
@@ -33,6 +34,7 @@ public class MeetupServiceImpl implements MeetupService {
         Optional<Meetup> meetupOptional;
         try (DaoHelper daoHelper = daoHelperFactory.createHelper()) {
             MeetupDao meetupDao = daoHelper.createMeetupDao();
+
             meetupOptional = meetupDao.getById(id);
         } catch (DaoException e) {
             throw new ServiceException(e);
@@ -47,6 +49,9 @@ public class MeetupServiceImpl implements MeetupService {
     public void updateMeetup(Meetup meetup, Integer id) throws ServiceException {
         try (DaoHelper daoHelper = daoHelperFactory.createHelper()) {
             MeetupDao meetupDao = daoHelper.createMeetupDao();
+
+            throwServiceExceptionIfMeetupByIdDoesNotExist(meetupDao, id);
+
             meetupDao.update(meetup, id);
         } catch (DaoException e) {
             throw new ServiceException(e);
@@ -57,6 +62,7 @@ public class MeetupServiceImpl implements MeetupService {
     public void createMeetup(Meetup meetup) throws ServiceException {
         try (DaoHelper daoHelper = daoHelperFactory.createHelper()) {
             MeetupDao meetupDao = daoHelper.createMeetupDao();
+
             meetupDao.create(meetup);
         } catch (DaoException e) {
             throw new ServiceException(e);
@@ -67,9 +73,19 @@ public class MeetupServiceImpl implements MeetupService {
     public void deleteMeetup(Integer id) throws ServiceException {
         try (DaoHelper daoHelper = daoHelperFactory.createHelper()) {
             MeetupDao meetupDao = daoHelper.createMeetupDao();
+
+            throwServiceExceptionIfMeetupByIdDoesNotExist(meetupDao, id);
+
             meetupDao.delete(id);
         } catch (DaoException e) {
             throw new ServiceException(e);
+        }
+    }
+
+    private void throwServiceExceptionIfMeetupByIdDoesNotExist(MeetupDao meetupDao, Integer id) throws DaoException, ServiceException {
+        Optional<Meetup> meetupOptional = meetupDao.getById(id);
+        if (meetupOptional.isEmpty()) {
+            throw new ServiceException("Could not find a meetup by id = " + id);
         }
     }
 }

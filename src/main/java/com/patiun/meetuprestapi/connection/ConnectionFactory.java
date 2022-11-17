@@ -13,7 +13,8 @@ import java.util.Properties;
 public class ConnectionFactory {
 
     private static final String CONNECTION_PROPERTIES_FILE_NAME = "databaseConnection.properties";
-    private static final String CONNECTION_URL = "db.conn.url";
+    private static final String CONNECTOR_CLASS = "db.connector.class";
+    private static final String CONNECTION_URL = "db.connection.url";
     private static final String USERNAME = "db.username";
     private static final String PASSWORD = "db.password";
 
@@ -22,14 +23,20 @@ public class ConnectionFactory {
     private final String databasePassword;
 
     public ConnectionFactory() {
-        Properties properties = new Properties();
-        InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(CONNECTION_PROPERTIES_FILE_NAME);
+        Properties databaseProperties = new Properties();
+        InputStream propertiesFileInputStream = getClass()
+                .getClassLoader()
+                .getResourceAsStream(CONNECTION_PROPERTIES_FILE_NAME);
         try {
-            properties.load(inputStream);
-            databaseConnectionUrl = properties.getProperty(CONNECTION_URL);
-            databaseUsername = properties.getProperty(USERNAME);
-            databasePassword = properties.getProperty(PASSWORD);
-        } catch (IOException e) {
+            databaseProperties.load(propertiesFileInputStream);
+
+            String databaseConnectorClassName = databaseProperties.getProperty(CONNECTOR_CLASS);
+            Class.forName(databaseConnectorClassName);
+
+            databaseConnectionUrl = databaseProperties.getProperty(CONNECTION_URL);
+            databaseUsername = databaseProperties.getProperty(USERNAME);
+            databasePassword = databaseProperties.getProperty(PASSWORD);
+        } catch (IOException | ClassNotFoundException e) {
             throw new ConnectionFactoryInitialisationException(e);
         }
     }
