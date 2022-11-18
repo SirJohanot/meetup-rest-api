@@ -6,5 +6,5 @@ import java.util.List;
 
 public interface MeetupListSorter {
 
-    List<Meetup> sort(List<Meetup> meetups, List<String> sortingParameters);
+    List<Meetup> sort(List<Meetup> meetups);
 }

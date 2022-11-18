@@ -4,15 +4,13 @@ import com.patiun.meetuprestapi.dao.MeetupDao;
 import com.patiun.meetuprestapi.dao.helper.DaoHelper;
 import com.patiun.meetuprestapi.dao.helper.DaoHelperFactory;
 import com.patiun.meetuprestapi.entity.Meetup;
-import com.patiun.meetuprestapi.entity.RequestParameters;
 import com.patiun.meetuprestapi.exception.DaoException;
 import com.patiun.meetuprestapi.exception.ElementNotFoundException;
 import com.patiun.meetuprestapi.exception.ServiceException;
-import com.patiun.meetuprestapi.filter.BulkMeetupFilter;
+import com.patiun.meetuprestapi.filter.MeetupFilter;
 import com.patiun.meetuprestapi.sorting.MeetupListSorter;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public class MeetupServiceImpl implements MeetupService {
@@ -34,14 +32,12 @@ public class MeetupServiceImpl implements MeetupService {
         }
     }
 
-    public List<Meetup> getAllMeetupsFilteredAndSorted(RequestParameters requestParameters, BulkMeetupFilter meetupFilter, MeetupListSorter meetupListSorter) throws ServiceException {
+    public List<Meetup> getAllMeetupsFilteredAndSorted(MeetupFilter meetupFilter, MeetupListSorter meetupListSorter) throws ServiceException {
         List<Meetup> fetchResults = getAllMeetups();
 
-        Map<String, String> filterParametersMap = requestParameters.getFilterParameters();
-        fetchResults = meetupFilter.filter(fetchResults, filterParametersMap);
+        fetchResults = meetupFilter.filter(fetchResults);
 
-        List<String> sortingParametersList = requestParameters.getSortingParameters();
-        fetchResults = meetupListSorter.sort(fetchResults, sortingParametersList);
+        fetchResults = meetupListSorter.sort(fetchResults);
 
         return fetchResults;
     }

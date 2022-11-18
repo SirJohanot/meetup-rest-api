@@ -4,13 +4,14 @@ import com.patiun.meetuprestapi.entity.Meetup;
 import com.patiun.meetuprestapi.entity.RequestParameters;
 import com.patiun.meetuprestapi.exception.ElementNotFoundException;
 import com.patiun.meetuprestapi.exception.ServiceException;
-import com.patiun.meetuprestapi.filter.BulkMeetupFilterImpl;
+import com.patiun.meetuprestapi.filter.BulkMeetupFilter;
 import com.patiun.meetuprestapi.service.MeetupService;
-import com.patiun.meetuprestapi.sorting.MeetupListSorterImpl;
+import com.patiun.meetuprestapi.sorting.MultipleParametersMeetupListSorter;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 public class GetMeetupCommand extends AbstractMeetupCommand {
@@ -34,7 +35,9 @@ public class GetMeetupCommand extends AbstractMeetupCommand {
 
             if (req.getContentLength() > 0) {
                 RequestParameters requestParameters = getObjectFromRequestBody(req, RequestParameters.class);
-                results = meetupService.getAllMeetupsFilteredAndSorted(requestParameters, new BulkMeetupFilterImpl(), new MeetupListSorterImpl());
+                Map<String, String> filterParameters = requestParameters.getFilterParameters();
+                List<String> sortingParameters = requestParameters.getSortingParameters();
+                results = meetupService.getAllMeetupsFilteredAndSorted(new BulkMeetupFilter(filterParameters), new MultipleParametersMeetupListSorter(sortingParameters));
             } else {
                 results = meetupService.getAllMeetups();
             }
