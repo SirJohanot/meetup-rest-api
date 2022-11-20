@@ -2,6 +2,7 @@ package com.patiun.meetuprestapi.filter;
 
 import com.patiun.meetuprestapi.entity.Meetup;
 import com.patiun.meetuprestapi.filter.predicate.MeetupPredicate;
+import com.patiun.meetuprestapi.filter.predicate.MeetupPredicateFactory;
 
 import java.util.ArrayList;
 import java.util.List;

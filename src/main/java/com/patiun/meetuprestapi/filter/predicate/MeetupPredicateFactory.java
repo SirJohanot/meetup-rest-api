@@ -1,9 +1,4 @@
-package com.patiun.meetuprestapi.filter;
-
-import com.patiun.meetuprestapi.filter.predicate.AgendaMeetupPredicate;
-import com.patiun.meetuprestapi.filter.predicate.DateTimeMeetupPredicate;
-import com.patiun.meetuprestapi.filter.predicate.MeetupPredicate;
-import com.patiun.meetuprestapi.filter.predicate.OrganizerMeetupPredicate;
+package com.patiun.meetuprestapi.filter.predicate;
 
 public class MeetupPredicateFactory {
 
