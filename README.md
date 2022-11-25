@@ -14,7 +14,8 @@
 
 ## Форматы запросов к API
 
-* Получить все митапы\
+* Получить все митапы
+
   Пример запроса:
 
 ```http request
@@ -34,7 +35,8 @@ Content-Type: application/json
 где `filterParameters` и `sortingParameters` являются опциональными параметрами, задающими фильтрацию и сортировку
 результатов. Поддерживаемые параметры митапов: `agenda`, `dateTime`, `organizer`
 
-* Получить митап\
+* Получить митап
+
   Пример запроса:
 
 ```http request
@@ -43,7 +45,8 @@ GET http://localhost:8080/meetup-rest-api-0-0-1/meetup/{id} HTTP/1.1
 
 где `{id}` - id запрашиваемого митапа
 
-* Добавить новый митап\
+* Добавить новый митап
+
   Пример запроса:
 
 ```http request
@@ -59,7 +62,8 @@ Content-Type: application/json
 }
 ```
 
-* Удалить митап\
+* Удалить митап
+
   Пример запроса:
 
 ```http request
@@ -68,7 +72,8 @@ DELETE http://localhost:8080/meetup-rest-api-0-0-1/meetup/{id} HTTP/1.1
 
 где `{id}` - id удаляемого митапа
 
-* Изменить митап\
+* Изменить митап
+
   Пример запроса:
 
 ```http request
